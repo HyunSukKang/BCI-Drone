@@ -41,15 +41,6 @@ def Convert_to_featureVector(EpochsT, NumT, EpochsN, NumN, featureNum):
         for j in range(NumN):
             FeaturesN[j,:] = np.reshape(EpochsN[j,:,:],(1,featureNum))
         return [FeaturesT,FeaturesN]
-
-def Balancing_DataSet(Epochs, size):
-    Epochs_New = np.zeros((size, Epochs.shape[1], Epochs.shape[2]))
-    
-    index = np.random.choice(Epochs.shape[0], size = size, replace = False)
-    
-    Epochs_New = Epochs[index, :, :]
-    
-    return Epochs_New
     
 def Standardization(Epochs):
     for i in range(Epochs.shape[1]):
@@ -109,7 +100,7 @@ def main():
         ##Preprocessing process
 
         #Bandpass Filter
-        eegData = butter_bandpass_filter(eegData, 0.23, 30, samplingFreq, order=4)
+        eegData = butter_bandpass_filter(eegData, 0.1, 30, samplingFreq, order=4)
     
         #Epoching
         epochSampleNum = int(np.floor(1.0 * samplingFreq))
@@ -118,7 +109,10 @@ def main():
         [EpochsT, NumT] = Epoching(eegData, stims, 1, samplingFreq, channelNum, epochSampleNum, offset, baseline)
         [EpochsN, NumN] = Epoching(eegData, stims, 0, samplingFreq, channelNum, epochSampleNum, offset, baseline)
         
-        EpochsN_New = Balancing_DataSet(EpochsN, NumT)
+        EpochsN_New = np.zeros((NumT, channelNum, epochSampleNum))
+        NumN = NumT
+        for i in range(NumN):
+            EpochsN_New[i,:,:] = np.mean(EpochsN[i*5:i*5+5, :, :], axis=0)
         
         #Convert to feature vector
         [EpochsT_Aver, NumT_Aver, EpochsN_Aver, NumN_Aver] = Make_Average_Component(EpochsT, NumT, EpochsN_New, NumT, channelNum, epochSampleNum, 20)
