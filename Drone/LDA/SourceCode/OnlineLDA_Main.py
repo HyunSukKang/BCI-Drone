@@ -47,6 +47,13 @@ def Convert_to_FeatureVector(Epochs, buttonNum, featureNum):
         Features[i, :] = np.reshape(Epochs[i, :, :], (1, featureNum))
     return Features
     
+def resampling(Epochs, resampleRate, channelNum):
+        resampled_epoch = np.zeros((channelNum, resampleRate))
+        for j in range(channelNum):
+            resampled_epoch[j,:] = signal.resample(Epochs[j,:], resampleRate)
+            
+        return resampled_epoch    
+
 def main():
 #        global file_exist, file1, file2, channelNum
         Data_path ="C:\\Users\\user\\Desktop\\Drone\\LDA\\Data\\"
@@ -100,7 +107,7 @@ def main():
             ### Preprocessing process            
 
             #Bandpass Filter
-            eegData = butter_bandpass_filter(eegData, 0.23, 30, samplingFreq, 4)
+            eegData = butter_bandpass_filter(eegData, 0.1, 30, samplingFreq, 4)
 
             #Epoching
             epochSampleNum = int(np.floor(1.0 * samplingFreq))
@@ -108,10 +115,15 @@ def main():
             baseline = int(np.floor(1.0 * samplingFreq)) 
             
             Epochs_Aver = np.zeros((buttonNum, channelNum, epochSampleNum))
-            featureNum = channelNum*epochSampleNum
+            
+            resampleRate = 100
+            featureNum = channelNum*resampleRate
+            
+            Epochs_final = np.zeros((buttonNum, channelNum, resampleRate))
             
             for i in range(buttonNum):
                 Epochs_Aver[i] = Epoching(eegData, stims, (i+1), samplingFreq, channelNum, epochSampleNum, offset, baseline)
+                Epochs_final[i] = resampling(Epochs_Aver[i], resampleRate, channelNum)
                 
             Features = Convert_to_FeatureVector(Epochs_Aver, buttonNum, featureNum)
             
