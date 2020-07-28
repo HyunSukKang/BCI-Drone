@@ -65,6 +65,12 @@ def Make_Average_Component(EpochsT, NumT, EpochsN, NumN, channelNum, epochSample
         
     return [EpochsT_Aver, NumT_Aver, EpochsN_Aver, NumN_Aver]
 
+def resampling(Epochs, EpochNum, resampleRate, channelNum):
+        resampled_epoch = np.zeros((EpochNum, channelNum, resampleRate))
+        for i in range(EpochNum):
+            for j in range(channelNum):
+                resampled_epoch[i,j,:] = signal.resample(Epochs[i,j,:], resampleRate)
+        return resampled_epoch
 
 def main():
         start = time.time()
@@ -114,9 +120,14 @@ def main():
         for i in range(NumN):
             EpochsN_New[i,:,:] = np.mean(EpochsN[i*5:i*5+5, :, :], axis=0)
         
+        resampleRate = 100
+        
         #Convert to feature vector
         [EpochsT_Aver, NumT_Aver, EpochsN_Aver, NumN_Aver] = Make_Average_Component(EpochsT, NumT, EpochsN_New, NumT, channelNum, epochSampleNum, 20)
-        featureNum = channelNum*epochSampleNum
+        EpochsT_Aver = resampling(EpochsT_Aver, NumT_Aver, resampleRate, channelNum) 
+        EpochsN_Aver = resampling(EpochsN_Aver, NumN_Aver, resampleRate, channelNum)
+        
+        featureNum = channelNum*resampleRate
         [FeaturesT, FeaturesN] = Convert_to_featureVector(EpochsT_Aver, NumT_Aver, EpochsN_Aver, NumN_Aver, featureNum)
         TrainData = np.concatenate((FeaturesT, FeaturesN))
         TrainLabel = np.concatenate((np.ones((NumT_Aver,1)).astype(int),np.zeros((NumN_Aver,1)).astype(int))).ravel()
