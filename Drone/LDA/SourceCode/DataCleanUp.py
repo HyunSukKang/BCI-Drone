@@ -44,15 +44,34 @@ def clean():
     os.remove(online_list[-1])
     online_list = online_list[:-1]
     
+    result_file = open(txt_path[0], 'r', encoding = 'utf-16')
+    lines = result_file.readlines()
+    lines = lines[:-1]
+    
+    for i in range(len(lines)):
+        line = lines[i]
+        mat_file = online_list[i]
+
+        index = [int(s) for s in line.split() if s.isdigit()]
+        
+        path, filename = os.path.split(mat_file)
+
+        newname = path + '\\'+ str(i+1) + '_' + str(index[0]) + '.mat'
+        os.rename(mat_file, newname)
+        online_list[i] = newname
+        
+#         print('before:', mat_file)
+#         print('after:', newname)
+    
     # Convert Ov files to Mat files
     ov2mat(train_list, final_path + '\\Traning\\')
     ov2mat(online_list, final_path + '\\Online\\')
     
-    
-    
+    # Move txt file
+    shutil.move(txt_list[0], final_path + '\\' + txt_tail)
+      
 def main():
     clean()
-    
     
 if __name__ == "__main__":
     main()
